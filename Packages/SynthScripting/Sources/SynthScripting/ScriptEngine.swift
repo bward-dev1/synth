@@ -2,17 +2,17 @@ import Foundation
 import JavaScriptCore
 import SynthCore
 
-class ScriptEngine {
+public class ScriptEngine {
     private let context: JSContext
     private let queue = DispatchQueue(label: "com.synth.scripting", qos: .userInitiated)
     private let timeout: TimeInterval = 2.0
 
-    var consoleOutput: [String] = []
-    var lastTextureData: [UInt8]? = nil
-    var lastMeshData: String? = nil
-    var lastAudioData: [Float]? = nil
+    public var consoleOutput: [String] = []
+    public var lastTextureData: [UInt8]? = nil
+    public var lastMeshData: String? = nil
+    public var lastAudioData: [Float]? = nil
 
-    init() {
+    public init() {
         self.context = JSContext()
 
         // Console capture
@@ -49,7 +49,7 @@ class ScriptEngine {
         """)
     }
 
-    func execute(_ script: String, timeout: TimeInterval = 2.0) -> Result<String, Error> {
+    public func execute(_ script: String, timeout: TimeInterval = 2.0) -> Result<String, Error> {
         var result: Result<String, Error>?
         let semaphore = DispatchSemaphore(value: 0)
 
