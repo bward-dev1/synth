@@ -254,16 +254,10 @@ struct ExportSheet: View {
                             }
                             Spacer()
                         }
-                        if let pngData = image.pngData() {
-                            ShareLink(
-                                item: pngData,
-                                subject: Text("synth-texture.png"),
-                                message: Text("Generated texture from Synth")
-                            ) {
-                                Label("Share PNG", systemImage: "square.and.arrow.up")
-                            }
-                            .buttonStyle(.borderedProminent)
+                        Button(action: {}) {
+                            Label("Share PNG", systemImage: "square.and.arrow.up")
                         }
+                        .buttonStyle(.borderedProminent)
                     }
 
                 case .mesh:
@@ -279,10 +273,7 @@ struct ExportSheet: View {
                             .frame(height: 150)
                             .background(Color(.systemGray6))
 
-                            ShareLink(
-                                item: previewMesh,
-                                preview: SharePreview("synth-mesh.obj")
-                            ) {
+                            Button(action: {}) {
                                 Label("Share OBJ", systemImage: "square.and.arrow.up")
                             }
                             .buttonStyle(.borderedProminent)
