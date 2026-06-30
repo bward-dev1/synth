@@ -1,131 +1,131 @@
 import SwiftUI
-import UIKit
 import SynthCore
 import SynthScripting
-import SynthTexture
-import SynthMesh
-import SynthAudio
 
 struct EditorView: View {
     @State private var scriptText = """
-    // Welcome to Synth!
-    // Write JavaScript code to generate textures, meshes, and audio.
-
-    // Example: Generate an fBm noise texture
-    let tex = texture.fbmNoise(scale: 2.0, octaves: 4, lacunarity: 2.0);
-
-    // Example: Generate a simple mesh
-    let mesh = mesh.sphere(radius: 1.0);
+    // Synth v1 — Creative Coding Sketchpad
+    // texture.fbmNoise(2.0, 4, 2.0)
+    // mesh.sphere(1.0)
+    // audio.fmSynth(2.0, 10.0, 2.0)
     """
 
     @State private var isRunning = false
     @State private var consoleOutput: [String] = []
     @State private var selectedTab: EditorTab = .texture
-    @State private var parameters: [Parameter] = []
+    @State private var previewImage: UIImage? = nil
+    @State private var previewMesh: String = ""
+    @State private var showExportSheet = false
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Top toolbar
-            HStack {
-                Button(action: runScript) {
-                    Label("Run", systemImage: "play.fill")
-                }
-                .disabled(isRunning)
+        ZStack {
+            Color(.systemBackground).ignoresSafeArea()
 
-                Spacer()
-
-                Picker("Module", selection: $selectedTab) {
-                    ForEach(EditorTab.allCases, id: \.self) { tab in
-                        Text(tab.rawValue).tag(tab)
+            VStack(spacing: 0) {
+                // Toolbar
+                HStack {
+                    Button(action: runScript) {
+                        Label("Run", systemImage: "play.fill")
+                            .font(.system(size: 16, weight: .semibold))
                     }
-                }
-                .pickerStyle(.segmented)
-            }
-            .padding()
-            .background(Color(.systemBackground))
+                    .disabled(isRunning)
+                    .buttonStyle(.borderedProminent)
 
-            // Code editor
-            ZStack {
-                TextEditor(text: $scriptText)
-                    .font(.monospaced(.system(size: 13))())
-                    .background(Color(.systemGray6))
-                    .padding(8)
-            }
-            .frame(maxHeight: 250)
+                    Spacer()
 
-            // Parameters panel (auto-generated from param() calls)
-            if !parameters.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Parameters")
-                        .font(.headline)
-                        .padding(.horizontal)
-
-                    ForEach($parameters) { $param in
-                        HStack {
-                            Text(param.name)
-                                .frame(width: 100, alignment: .leading)
-                            Slider(value: $param.value, in: param.min...param.max)
-                            Text(String(format: "%.2f", param.value))
-                                .frame(width: 50, alignment: .trailing)
-                        }
-                        .padding(.horizontal)
+                    Button(action: { showExportSheet = true }) {
+                        Label("Export", systemImage: "square.and.arrow.up")
+                            .font(.system(size: 14))
                     }
-                }
-                .padding(.vertical, 8)
-                .background(Color(.systemGray5))
-            }
+                    .buttonStyle(.bordered)
 
-            // Preview area
-            VStack {
-                Text("Preview")
-                    .font(.headline)
-                    .padding()
-
-                PreviewView(selectedTab: selectedTab)
-                    .frame(maxHeight: .infinity)
-            }
-            .background(Color(.systemBackground))
-
-            // Console
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Console")
-                    .font(.headline)
-                    .padding(.horizontal)
-
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 2) {
-                        ForEach(consoleOutput, id: \.self) { line in
-                            Text(line)
-                                .font(.system(size: 11, weight: .regular, design: .monospaced))
-                                .foregroundColor(.secondary)
+                    Picker("", selection: $selectedTab) {
+                        ForEach(EditorTab.allCases, id: \.self) { tab in
+                            Text(tab.rawValue).tag(tab)
                         }
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(4)
+                    .pickerStyle(.segmented)
+                    .frame(maxWidth: 200)
                 }
+                .padding()
+                .background(Color(.systemGray6))
+
+                // Editor and Preview Split
+                HStack(spacing: 0) {
+                    // Code Editor
+                    VStack(spacing: 0) {
+                        Text("Script").font(.caption).fontWeight(.semibold).frame(maxWidth: .infinity, alignment: .leading).padding(8)
+                        TextEditor(text: $scriptText)
+                            .font(.system(size: 12, design: .monospaced))
+                            .background(Color(.systemBackground))
+                            .padding(4)
+                        Divider()
+                        ConsoleView(output: $consoleOutput)
+                    }
+                    .frame(maxWidth: .infinity)
+
+                    Divider()
+
+                    // Preview
+                    PreviewPane(selectedTab: selectedTab, previewImage: previewImage, previewMesh: previewMesh)
+                        .frame(maxWidth: .infinity)
+                }
+
+                // Status
+                HStack {
+                    Text(isRunning ? "Running..." : "Ready")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text("Synth v1 — \(selectedTab.rawValue)")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+                .padding(8)
+                .background(Color(.systemGray6))
             }
-            .frame(height: 100)
-            .background(Color(.systemGray6))
+        }
+        .sheet(isPresented: $showExportSheet) {
+            ExportSheet(
+                previewImage: previewImage,
+                previewMesh: previewMesh,
+                selectedTab: selectedTab
+            )
         }
     }
 
     private func runScript() {
         isRunning = true
-        let engine = ScriptEngine()
+        consoleOutput.removeAll()
 
         DispatchQueue.global(qos: .userInitiated).async {
-            let result = engine.execute(scriptText, timeout: 2.0)
+            let engine = ScriptEngine()
+            let result = engine.execute(scriptText)
 
             DispatchQueue.main.async {
                 isRunning = false
+
                 switch result {
-                case .success(let jsValue):
-                    consoleOutput.append("✓ Script executed")
-                    if let output = jsValue?.description {
-                        consoleOutput.append(output)
+                case .success(let output):
+                    consoleOutput.append("✓ Executed")
+                    consoleOutput.append(output)
+
+                    // Generate preview based on selected tab
+                    switch selectedTab {
+                    case .texture:
+                        if let data = engine.lastTextureData {
+                            previewImage = createImageFromData(data, size: 256)
+                        }
+                    case .mesh:
+                        previewMesh = engine.lastMeshData ?? ""
+                    case .audio:
+                        if engine.lastAudioData != nil {
+                            consoleOutput.append("🔊 Audio synthesized")
+                        }
                     }
+
                 case .failure(let error):
-                    consoleOutput.append("✗ Error: \(error.localizedDescription)")
+                    consoleOutput.append("✗ \(error.localizedDescription)")
                 }
             }
         }
@@ -138,50 +138,201 @@ enum EditorTab: String, CaseIterable {
     case audio = "Audio"
 }
 
-struct Parameter {
-    var name: String
-    var value: Double
-    var min: Double
-    var max: Double
-}
-
-struct PreviewView: View {
-    let selectedTab: EditorTab
+struct ConsoleView: View {
+    @Binding var output: [String]
 
     var body: some View {
-        ZStack {
-            Color(.systemGray6)
+        VStack(alignment: .leading, spacing: 2) {
+            Text("Console").font(.caption).fontWeight(.semibold).padding(.horizontal, 8).padding(.top, 4)
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 1) {
+                        ForEach(output, id: \.self) { line in
+                            Text(line)
+                                .font(.system(size: 10, design: .monospaced))
+                                .foregroundColor(.secondary)
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                        }
+                    }
+                    .padding(4)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .onChange(of: output.count) { _ in
+                        if let last = output.last {
+                            proxy.scrollTo(last)
+                        }
+                    }
+                }
+            }
+        }
+        .background(Color(.systemGray6))
+        .frame(height: 80)
+    }
+}
 
-            VStack {
+struct PreviewPane: View {
+    let selectedTab: EditorTab
+    let previewImage: UIImage?
+    let previewMesh: String
+
+    var body: some View {
+        VStack {
+            Text("Preview").font(.caption).fontWeight(.semibold)
+
+            switch selectedTab {
+            case .texture:
+                if let image = previewImage {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFit()
+                        .padding()
+                } else {
+                    VStack {
+                        Image(systemName: "square.fill.pattern.grid.2x2")
+                            .font(.system(size: 48))
+                            .foregroundColor(.gray)
+                        Text("Run to preview").font(.caption).foregroundColor(.secondary)
+                    }
+                    .frame(maxHeight: .infinity)
+                }
+
+            case .mesh:
+                if !previewMesh.isEmpty {
+                    ScrollView {
+                        Text(previewMesh)
+                            .font(.system(size: 9, design: .monospaced))
+                            .lineLimit(nil)
+                            .padding(4)
+                    }
+                } else {
+                    VStack {
+                        Image(systemName: "cube.fill")
+                            .font(.system(size: 48))
+                            .foregroundColor(.gray)
+                        Text("Run to generate").font(.caption).foregroundColor(.secondary)
+                    }
+                    .frame(maxHeight: .infinity)
+                }
+
+            case .audio:
+                VStack {
+                    Image(systemName: "waveform.circle.fill")
+                        .font(.system(size: 48))
+                        .foregroundColor(.gray)
+                    Text("Audio synthesis ready").font(.caption).foregroundColor(.secondary)
+                }
+                .frame(maxHeight: .infinity)
+            }
+        }
+        .background(Color(.systemBackground))
+    }
+}
+
+struct ExportSheet: View {
+    let previewImage: UIImage?
+    let previewMesh: String
+    let selectedTab: EditorTab
+    @Environment(\.dismiss) var dismiss
+
+    var body: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Export \(selectedTab.rawValue)")
+                    .font(.headline)
+
                 switch selectedTab {
                 case .texture:
-                    Image(systemName: "square.fill.pattern.grid.2x2")
-                        .font(.system(size: 64))
-                        .foregroundColor(.gray)
-                    Text("Texture Preview")
+                    if let image = previewImage {
+                        HStack {
+                            Image(uiImage: image)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: 100)
+                            VStack(alignment: .leading) {
+                                Text("Texture").font(.caption).fontWeight(.semibold)
+                                Text("256×256 PNG").font(.caption2).foregroundColor(.secondary)
+                            }
+                            Spacer()
+                        }
+                        ShareLink(
+                            item: image,
+                            preview: SharePreview("synth-texture.png", image: Image(uiImage: image))
+                        ) {
+                            Label("Share PNG", systemImage: "square.and.arrow.up")
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
 
                 case .mesh:
-                    Image(systemName: "cube.fill")
-                        .font(.system(size: 64))
-                        .foregroundColor(.gray)
-                    Text("Mesh Preview")
+                    if !previewMesh.isEmpty {
+                        VStack(alignment: .leading) {
+                            Text("Mesh (OBJ)").font(.caption).fontWeight(.semibold)
+                            ScrollView {
+                                Text(previewMesh)
+                                    .font(.system(size: 9, design: .monospaced))
+                                    .lineLimit(nil)
+                                    .padding(4)
+                            }
+                            .frame(height: 150)
+                            .background(Color(.systemGray6))
+
+                            ShareLink(
+                                item: previewMesh,
+                                preview: SharePreview("synth-mesh.obj")
+                            ) {
+                                Label("Share OBJ", systemImage: "square.and.arrow.up")
+                            }
+                            .buttonStyle(.borderedProminent)
+                        }
+                    }
 
                 case .audio:
-                    Image(systemName: "waveform.circle.fill")
-                        .font(.system(size: 64))
-                        .foregroundColor(.gray)
-                    Text("Audio Preview")
+                    Text("Audio export available after synthesis")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+            }
+            .padding()
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") { dismiss() }
                 }
             }
         }
     }
 }
 
-// Simple monospaced font extension
-extension Font {
-    static func monospaced(_ size: CGFloat) -> Font {
-        .system(size: size, weight: .regular, design: .monospaced)
+func createImageFromData(_ data: [UInt8], size: Int) -> UIImage? {
+    let width = size
+    let height = size
+    let bitsPerComponent = 8
+    let bitsPerPixel = bitsPerComponent
+    let bytesPerRow = width
+
+    guard let provider = CGDataProvider(data: NSData(bytes: data, length: data.count)) else {
+        return nil
     }
+
+    guard let cgImage = CGImage(
+        width: width,
+        height: height,
+        bitsPerComponent: bitsPerComponent,
+        bitsPerPixel: bitsPerPixel,
+        bytesPerRow: bytesPerRow,
+        space: CGColorSpaceCreateDeviceGray(),
+        bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue),
+        provider: provider,
+        decode: nil,
+        shouldInterpolate: false,
+        intent: .defaultIntent
+    ) else {
+        return nil
+    }
+
+    return UIImage(cgImage: cgImage)
 }
 
 #Preview {

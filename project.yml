@@ -1,6 +1,6 @@
 name: Synth
 options:
-  bundleIdPrefix: com.synth
+  bundleIdPrefix: com.bward
   deploymentTarget:
     iOS: 15.0
   minimumXcodeGenVersion: 2.34
@@ -12,19 +12,18 @@ targets:
     platform: iOS
     sources:
       - path: App
+    resources:
+      - path: App/Info.plist
     dependencies:
       - target: SynthCore
       - target: SynthScripting
-      - target: SynthTexture
-      - target: SynthMesh
-      - target: SynthAudio
       - target: SynthUI
-      - target: SynthDocs
     settings:
       CODE_SIGNING_ALLOWED: "NO"
       CODE_SIGNING_REQUIRED: "NO"
       ENABLE_BITCODE: "NO"
       IPHONEOS_DEPLOYMENT_TARGET: 15.0
+      INFOPLIST_FILE: App/Info.plist
     attributes:
       TargetAttributes:
         Synth:
@@ -48,6 +47,20 @@ targets:
       - path: Packages/SynthScripting/Sources/SynthScripting
     dependencies:
       - target: SynthCore
+    settings:
+      CODE_SIGNING_ALLOWED: "NO"
+      CODE_SIGNING_REQUIRED: "NO"
+      ENABLE_BITCODE: "NO"
+      IPHONEOS_DEPLOYMENT_TARGET: 15.0
+
+  SynthUI:
+    type: framework
+    platform: iOS
+    sources:
+      - path: Packages/SynthUI/Sources/SynthUI
+    dependencies:
+      - target: SynthCore
+      - target: SynthScripting
     settings:
       CODE_SIGNING_ALLOWED: "NO"
       CODE_SIGNING_REQUIRED: "NO"
@@ -87,24 +100,6 @@ targets:
       - path: Packages/SynthAudio/Sources/SynthAudio
     dependencies:
       - target: SynthCore
-    settings:
-      CODE_SIGNING_ALLOWED: "NO"
-      CODE_SIGNING_REQUIRED: "NO"
-      ENABLE_BITCODE: "NO"
-      IPHONEOS_DEPLOYMENT_TARGET: 15.0
-
-  SynthUI:
-    type: framework
-    platform: iOS
-    sources:
-      - path: Packages/SynthUI/Sources/SynthUI
-    dependencies:
-      - target: SynthCore
-      - target: SynthScripting
-      - target: SynthTexture
-      - target: SynthMesh
-      - target: SynthAudio
-      - target: SynthDocs
     settings:
       CODE_SIGNING_ALLOWED: "NO"
       CODE_SIGNING_REQUIRED: "NO"

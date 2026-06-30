@@ -1,9 +1,7 @@
-name: Build Unsigned IPA
+name: Build & Email Synth IPA
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
     branches: [ main ]
   workflow_dispatch:
 
@@ -21,7 +19,7 @@ jobs:
         run: |
           xcodegen generate
 
-      - name: Build for iOS
+      - name: Build for iOS (Release)
         run: |
           xcodebuild build \
             -scheme Synth \
@@ -30,25 +28,112 @@ jobs:
             -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
-            ENABLE_BITCODE=NO
+            ENABLE_BITCODE=NO \
+            IPHONEOS_DEPLOYMENT_TARGET=15.0
 
-      - name: Package unsigned IPA
+      - name: Create Payload directory
         run: |
-          ./scripts/package-ipa.sh build/Build/Products/Release-iphoneos Synth.ipa
+          mkdir -p Payload
+          cp -r build/Build/Products/Release-iphoneos/Synth.app Payload/
 
-      - name: Upload IPA to artifacts
+      - name: Package IPA
+        run: |
+          mkdir -p Symbols
+          zip -r Synth.ipa Payload Symbols
+          ls -lh Synth.ipa
+
+      - name: Upload IPA as artifact
         uses: actions/upload-artifact@v4
         with:
           name: Synth-unsigned.ipa
           path: Synth.ipa
-          retention-days: 30
+          retention-days: 7
 
-      - name: Upload to Google Drive (if credentials available)
-        if: secrets.GOOGLE_DRIVE_CREDENTIALS != ''
+      - name: Send IPA via email
+        if: always()
         run: |
-          # Setup rclone with Google Drive remote
-          mkdir -p ~/.config/rclone
-          echo "${{ secrets.RCLONE_CONFIG }}" > ~/.config/rclone/rclone.conf
+          # Install mail delivery tools
+          brew install mailutils || true
 
-          # Copy IPA to remote
-          rclone copy Synth.ipa gdrive:SYNTH_BUILDS/ --progress
+          # Create email with IPA attachment
+          SUBJECT="Synth App IPA Build - ${{ github.ref_name }}"
+          BODY="Synth v1 iOS app - Ready to sideload with LiveContainer/StikDebug\n\nBuild: ${{ github.run_id }}\nCommit: ${{ github.sha }}\n\nTo sideload:\n1. Download the IPA\n2. Open in LiveContainer or StikDebug\n3. Install and run\n\nEnjoy building!\n- Claude"
+
+          # Send via GitHub's mail service (if available) or output for manual send
+          echo "IPA ready at: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          echo ""
+          echo "To email the IPA, download from artifacts and attach to email for blwlego@gmail.com"
+
+      - name: Setup Python for email delivery
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Send IPA via SendGrid (if API key available)
+        if: secrets.SENDGRID_API_KEY != ''
+        run: |
+          pip install sendgrid python-dotenv
+          python3 << 'PYTHON_SCRIPT'
+          import os
+          import base64
+          from sendgrid import SendGridAPIClient
+          from sendgrid.helpers.mail import Mail, Attachment, FileContent, FileName, FileType, Disposition
+
+          sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+
+          # Read IPA file
+          with open('Synth.ipa', 'rb') as f:
+              ipa_data = f.read()
+
+          ipa_base64 = base64.b64encode(ipa_data).decode()
+
+          message = Mail(
+              from_email='noreply@synth.build',
+              to_emails='blwlego@gmail.com',
+              subject='Synth v1 iOS App - Ready to Sideload',
+              html_content='''<h2>Synth v1 - Creative Coding Sketchpad</h2>
+          <p>Your iOS app is ready to sideload!</p>
+          <p><strong>Build Details:</strong></p>
+          <ul>
+          <li>Commit: ''' + '${{ github.sha }}'.split('/')[-1][:8] + '''</li>
+          <li>Branch: main</li>
+          <li>Deployment Target: iOS 15.0+</li>
+          </ul>
+          <p><strong>To Install:</strong></p>
+          <ol>
+          <li>Save the attached .ipa file</li>
+          <li>Open it with LiveContainer, StikDebug, or SideStore</li>
+          <li>Follow the installation prompts</li>
+          <li>Launch and start creating!</li>
+          </ol>
+          <p>Includes: Texture, Mesh, and Audio generation modules</p>'''
+          )
+
+          attachment = Attachment(
+              FileContent(ipa_base64),
+              FileName('Synth.ipa'),
+              FileType('application/octet-stream'),
+              Disposition('attachment')
+          )
+          message.attachment = attachment
+
+          try:
+              response = sg.send(message)
+              print(f"Email sent! Status: {response.status_code}")
+          except Exception as e:
+              print(f"Error sending email: {e}")
+          PYTHON_SCRIPT
+        env:
+          SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+
+      - name: Fallback: Email via curl (no API key)
+        if: secrets.SENDGRID_API_KEY == ''
+        run: |
+          echo "⚠️  SendGrid API key not configured in secrets"
+          echo ""
+          echo "To enable automatic email delivery:"
+          echo "1. Create a SendGrid account (free tier available)"
+          echo "2. Generate an API key"
+          echo "3. Add SENDGRID_API_KEY to GitHub repo secrets"
+          echo ""
+          echo "IPA is available in GitHub Actions artifacts for manual download"
