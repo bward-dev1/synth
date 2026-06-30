@@ -95,7 +95,7 @@ jobs:
           <p>Your iOS app is ready to sideload!</p>
           <p><strong>Build Details:</strong></p>
           <ul>
-          <li>Commit: ''' + '${{ github.sha }}'.split('/')[-1][:8] + '''</li>
+          <li>Build: ${{ github.run_id }}</li>
           <li>Branch: main</li>
           <li>Deployment Target: iOS 15.0+</li>
           </ul>
