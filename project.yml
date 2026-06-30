@@ -1,0 +1,123 @@
+name: Synth
+options:
+  bundleIdPrefix: com.synth
+  deploymentTarget:
+    iOS: 15.0
+  minimumXcodeGenVersion: 2.34
+  useBaseInternationalization: false
+
+targets:
+  Synth:
+    type: application
+    platform: iOS
+    sources:
+      - path: App
+    dependencies:
+      - target: SynthCore
+      - target: SynthScripting
+      - target: SynthTexture
+      - target: SynthMesh
+      - target: SynthAudio
+      - target: SynthUI
+      - target: SynthDocs
+    settings:
+      CODE_SIGNING_ALLOWED: "NO"
+      CODE_SIGNING_REQUIRED: "NO"
+      ENABLE_BITCODE: "NO"
+      IPHONEOS_DEPLOYMENT_TARGET: 15.0
+    attributes:
+      TargetAttributes:
+        Synth:
+          CreatedOnToolsVersion: 15.0
+
+  SynthCore:
+    type: framework
+    platform: iOS
+    sources:
+      - path: Packages/SynthCore/Sources/SynthCore
+    settings:
+      CODE_SIGNING_ALLOWED: "NO"
+      CODE_SIGNING_REQUIRED: "NO"
+      ENABLE_BITCODE: "NO"
+      IPHONEOS_DEPLOYMENT_TARGET: 15.0
+
+  SynthScripting:
+    type: framework
+    platform: iOS
+    sources:
+      - path: Packages/SynthScripting/Sources/SynthScripting
+    dependencies:
+      - target: SynthCore
+    settings:
+      CODE_SIGNING_ALLOWED: "NO"
+      CODE_SIGNING_REQUIRED: "NO"
+      ENABLE_BITCODE: "NO"
+      IPHONEOS_DEPLOYMENT_TARGET: 15.0
+
+  SynthTexture:
+    type: framework
+    platform: iOS
+    sources:
+      - path: Packages/SynthTexture/Sources/SynthTexture
+    dependencies:
+      - target: SynthCore
+    settings:
+      CODE_SIGNING_ALLOWED: "NO"
+      CODE_SIGNING_REQUIRED: "NO"
+      ENABLE_BITCODE: "NO"
+      IPHONEOS_DEPLOYMENT_TARGET: 15.0
+
+  SynthMesh:
+    type: framework
+    platform: iOS
+    sources:
+      - path: Packages/SynthMesh/Sources/SynthMesh
+    dependencies:
+      - target: SynthCore
+    settings:
+      CODE_SIGNING_ALLOWED: "NO"
+      CODE_SIGNING_REQUIRED: "NO"
+      ENABLE_BITCODE: "NO"
+      IPHONEOS_DEPLOYMENT_TARGET: 15.0
+
+  SynthAudio:
+    type: framework
+    platform: iOS
+    sources:
+      - path: Packages/SynthAudio/Sources/SynthAudio
+    dependencies:
+      - target: SynthCore
+    settings:
+      CODE_SIGNING_ALLOWED: "NO"
+      CODE_SIGNING_REQUIRED: "NO"
+      ENABLE_BITCODE: "NO"
+      IPHONEOS_DEPLOYMENT_TARGET: 15.0
+
+  SynthUI:
+    type: framework
+    platform: iOS
+    sources:
+      - path: Packages/SynthUI/Sources/SynthUI
+    dependencies:
+      - target: SynthCore
+      - target: SynthScripting
+      - target: SynthTexture
+      - target: SynthMesh
+      - target: SynthAudio
+      - target: SynthDocs
+    settings:
+      CODE_SIGNING_ALLOWED: "NO"
+      CODE_SIGNING_REQUIRED: "NO"
+      ENABLE_BITCODE: "NO"
+      IPHONEOS_DEPLOYMENT_TARGET: 15.0
+
+  SynthDocs:
+    type: framework
+    platform: iOS
+    sources:
+      - path: Packages/SynthDocs/Sources/SynthDocs
+    settings:
+      CODE_SIGNING_ALLOWED: "NO"
+      CODE_SIGNING_REQUIRED: "NO"
+      ENABLE_BITCODE: "NO"
+      IPHONEOS_DEPLOYMENT_TARGET: 15.0

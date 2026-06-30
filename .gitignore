@@ -1,0 +1,44 @@
+# Xcode
+build/
+*.xcodeproj/
+*.xcworkspace/
+DerivedData/
+*.xcarchive
+*.swiftpm
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# IDE
+.vscode/
+*.swiftpm/xcode.resolved
+
+# Generated files
+project.pbxproj
+
+# Build artifacts
+*.ipa
+*.app
+*.dSYM
+
+# OS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Temp files
+*.tmp
+*~
+.idea/
+
+# Xcode user settings
+xcuserdata/
+*.xcuserdatad/
+
+# CocoaPods
+Pods/
+Podfile.lock
+
+# Carthage
+Carthage/
