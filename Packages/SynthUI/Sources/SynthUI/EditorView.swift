@@ -2,7 +2,7 @@ import SwiftUI
 import SynthCore
 import SynthScripting
 
-struct EditorView: View {
+public struct EditorView: View {
     @State private var scriptText = """
     // Synth v1 — Creative Coding Sketchpad
     // texture.fbmNoise(2.0, 4, 2.0)
@@ -17,7 +17,9 @@ struct EditorView: View {
     @State private var previewMesh: String = ""
     @State private var showExportSheet = false
 
-    var body: some View {
+    public init() {}
+
+    public var body: some View {
         ZStack {
             Color(.systemBackground).ignoresSafeArea()
 
