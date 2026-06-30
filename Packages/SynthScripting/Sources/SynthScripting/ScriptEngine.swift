@@ -24,7 +24,7 @@ class ScriptEngine {
         }
 
         // texture API
-        let textureAPI = ["fbmNoise": { (scale: Any, octaves: Any, lacunarity: Any) -> String in
+        let textureAPI = ["fbmNoise": { (scale: Any, octaves: Any, lacunarity: Any) -> [UInt8] in
             return generateFBMNoise(scale: scale as! Double, octaves: octaves as! Int, lacunarity: lacunarity as! Double)
         }] as [String: Any]
         context.setObject(textureAPI, forKeyedSubscript: "texture" as NSString)
@@ -36,7 +36,7 @@ class ScriptEngine {
         context.setObject(meshAPI, forKeyedSubscript: "mesh" as NSString)
 
         // audio API
-        let audioAPI = ["fmSynth": { (ratio: Any, index: Any, duration: Any) -> String in
+        let audioAPI = ["fmSynth": { (ratio: Any, index: Any, duration: Any) -> [Float] in
             return generateFMSynth(ratio: ratio as! Double, index: index as! Double, duration: duration as! Double)
         }] as [String: Any]
         context.setObject(audioAPI, forKeyedSubscript: "audio" as NSString)
@@ -156,7 +156,7 @@ func generateSphere(radius: Double) -> String {
     return obj
 }
 
-func generateFMSynth(ratio: Double, index: Double, duration: Double) -> String {
+func generateFMSynth(ratio: Double, index: Double, duration: Double) -> [Float] {
     let sampleRate = 44100.0
     let samples = Int(duration * sampleRate)
     var audio = [Float]()
@@ -172,7 +172,7 @@ func generateFMSynth(ratio: Double, index: Double, duration: Double) -> String {
         audio.append(sample * 0.3)
     }
 
-    return "FM \(samples) samples"
+    return audio
 }
 
 // Simple Perlin noise implementation
