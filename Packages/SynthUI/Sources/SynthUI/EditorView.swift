@@ -235,12 +235,15 @@ struct ExportSheet: View {
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
-        NavigationStack {
-            VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
                 Text("Export \(selectedTab.rawValue)")
                     .font(.headline)
+                Spacer()
+                Button("Done") { dismiss() }
+            }
 
-                switch selectedTab {
+            switch selectedTab {
                 case .texture:
                     if let image = previewImage {
                         HStack {
@@ -289,13 +292,6 @@ struct ExportSheet: View {
                 Spacer()
             }
             .padding()
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") { dismiss() }
-                }
-            }
-        }
     }
 }
 
