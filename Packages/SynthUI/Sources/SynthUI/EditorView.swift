@@ -254,13 +254,16 @@ struct ExportSheet: View {
                             }
                             Spacer()
                         }
-                        ShareLink(
-                            item: image,
-                            preview: SharePreview("synth-texture.png", image: Image(uiImage: image))
-                        ) {
-                            Label("Share PNG", systemImage: "square.and.arrow.up")
+                        if let pngData = image.pngData() {
+                            ShareLink(
+                                item: pngData,
+                                subject: Text("synth-texture.png"),
+                                message: Text("Generated texture from Synth")
+                            ) {
+                                Label("Share PNG", systemImage: "square.and.arrow.up")
+                            }
+                            .buttonStyle(.borderedProminent)
                         }
-                        .buttonStyle(.borderedProminent)
                     }
 
                 case .mesh:
