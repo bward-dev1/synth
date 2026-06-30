@@ -24,19 +24,19 @@ class ScriptEngine {
         }
 
         // texture API
-        let textureAPI = ["fbmNoise": { scale, octaves, lacunarity in
+        let textureAPI = ["fbmNoise": { (scale: Any, octaves: Any, lacunarity: Any) -> String in
             return generateFBMNoise(scale: scale as! Double, octaves: octaves as! Int, lacunarity: lacunarity as! Double)
         }] as [String: Any]
         context.setObject(textureAPI, forKeyedSubscript: "texture" as NSString)
 
         // mesh API
-        let meshAPI = ["sphere": { radius in
+        let meshAPI = ["sphere": { (radius: Any) -> String in
             return generateSphere(radius: radius as! Double)
         }] as [String: Any]
         context.setObject(meshAPI, forKeyedSubscript: "mesh" as NSString)
 
         // audio API
-        let audioAPI = ["fmSynth": { ratio, index, duration in
+        let audioAPI = ["fmSynth": { (ratio: Any, index: Any, duration: Any) -> String in
             return generateFMSynth(ratio: ratio as! Double, index: index as! Double, duration: duration as! Double)
         }] as [String: Any]
         context.setObject(audioAPI, forKeyedSubscript: "audio" as NSString)
